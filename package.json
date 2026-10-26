@@ -8,7 +8,7 @@
 		"start": "wrangler dev",
 		"test": "vitest",
 		"cf-typegen": "wrangler types",
-		"probe": "tsx scripts/prober.ts"
+		"probe": "npx tsx scripts/prober.ts"
 	},
 	"dependencies": {
 		"@types/node-fetch": "^2.6.13",
