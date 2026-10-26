@@ -12,6 +12,10 @@ const MAX_FRAUD_SCORE = Number(process.env.MAX_FRAUD_SCORE || 35);
 const IS_DEBUG = process.env.DEBUG === '1' || process.argv.includes('--debug');
 const CONCURRENCY = IS_DEBUG ? 1 : 5; // 本地调试时单线程串行，日志更清晰
 
+console.log('=== 环境变量检查 ===');
+console.log('WORKER_URL:', process.env.WORKER_URL ? '已配置 (' + process.env.WORKER_URL + ')' : '❌ 未配置！');
+console.log('PROBER_SECRET:', process.env.PROBER_SECRET ? '已配置 (长度: ' + process.env.PROBER_SECRET.length + ')' : '❌ 未配置！');
+
 // 自动查找系统中的 ocproxy 绝对路径 (兼容 Linux /usr/bin 与 macOS Homebrew)
 function getOcproxyPath(): string {
 	try {
@@ -27,12 +31,20 @@ async function main() {
 	console.log(`=== 启动模式: ${IS_DEBUG ? '🔧 本地 DEBUG 调试模式 (仅测前 3 个可用节点)' : '🚀 生产批量并发模式'} ===`);
 	console.log(`=== 目标 Worker: ${WORKER_URL} | ocproxy 路径: ${OCPROXY_BIN} ===\n`);
 
+	const headers = {
+		Authorization: `Bearer ${PROBER_SECRET}`,
+		'Content-Type': 'application/json',
+		'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+		'Accept-Language': 'zh-CN,zh;q=0.9',
+	};
+
 	const now = Math.floor(Date.now() / 1000);
 
 	// 1. 测试与本地/远程 CF Worker 的通信是否正常
 	const stateRes = await fetch(`${WORKER_URL}/api/state`, {
-		headers: { Authorization: `Bearer ${PROBER_SECRET}` },
+		headers: headers,
 	});
+
 	if (!stateRes.ok) {
 		throw new Error(
 			`无法连接 Worker (${WORKER_URL}/api/state)，HTTP ${stateRes.status}。请检查 wrangler dev 是否已启动且 PROBER_SECRET 一致！`,
@@ -66,9 +78,9 @@ async function main() {
 
 	if (IS_DEBUG) {
 		rawNodes = rawNodes.slice(0, 3); // 本地测试只取前 3 个，30 秒内出结果
-    debug(`[DEBUG] 拉取到 ${rawNodes.length} 个可用节点，前 3 个: ${JSON.stringify(rawNodes.slice(0, 3), null, 2)}`);
+		debug(`[DEBUG] 拉取到 ${rawNodes.length} 个可用节点，前 3 个: ${JSON.stringify(rawNodes.slice(0, 3), null, 2)}`);
 	}
-	
+
 	console.log(`[3/4] 本轮计划拨测节点数: ${rawNodes.length} 个\n`);
 	const validCleanNodes: any[] = [];
 
