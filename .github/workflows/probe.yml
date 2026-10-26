@@ -1,0 +1,35 @@
+name: OpenVPN Purity Prober
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install OpenVPN and ocproxy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openvpn ocproxy
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install NPM dependencies
+        run: npm install
+
+      - name: Run OpenVPN Prober
+        env:
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          PROBER_SECRET: ${{ secrets.PROBER_SECRET }}
+          MAX_FRAUD_SCORE: "35"
+        run: npm run probe

@@ -1,0 +1,11 @@
+name = "cf-vpngate"
+main = "src/index.ts"
+compatibility_date = "2026-04-01"
+
+[[kv_namespaces]]
+binding = "VPN_KV"
+
+# 本地开发/部署提示：PROBER_SECRET 建议通过 npx wrangler secret put PROBER_SECRET 注入生产环境
+[vars]
+MAX_FRAUD_SCORE = "35"
+PROBER_SECRET = "Mb6dgy7ooaBF2iosugddP7NA5R39imy3" # --- IGNORE ---
